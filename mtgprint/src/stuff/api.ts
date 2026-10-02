@@ -11,12 +11,24 @@ export async function fetchMoxfieldDeckData(deckId: string) {
   console.log(result);
 }
 
-export async function fetchArchidektDeckData(deckId: string) {
+export async function fetchArchidektDeckData(deckId: string): Promise<Card[]> {
   // TODO: backend
   const apiUrl = `https://archidekt.com/api/decks/${deckId}/`;
 
   const result = await fetch(CORS_PROXY_URL + apiUrl);
-  console.log(result);
+
+  const body = await result.json();
+
+  const cards: Card[] = body.cards.map((cardData: any) => ({
+    quantity: cardData.quantity,
+    name: cardData.card.oracleCard.name,
+    set: cardData.card.edition.editioncode,
+    collectorNumber: cardData.card.collectorNumber,
+  }));
+
+  console.log(cards);
+
+  return cards;
 }
 
 export async function fetchScryfall(cards: Card[]) {
