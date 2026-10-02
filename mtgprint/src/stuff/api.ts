@@ -22,6 +22,8 @@ export async function fetchArchidektDeckData(deckId: string): Promise<Card[]> {
 
   const body = await result.json();
 
+  // TODO: get token ids from every card, figure out how to get scryfall data from that
+
   const cards: Card[] = body.cards.map((cardData: any) => ({
     quantity: cardData.quantity,
     name: removeDoubleSidedName(cardData.card.oracleCard.name),
@@ -34,7 +36,13 @@ export async function fetchArchidektDeckData(deckId: string): Promise<Card[]> {
   return cards;
 }
 
-export async function fetchScryfall(cards: Card[]) {
+/**
+ *
+ * @returns Deep copy of cards with imageSrcs
+ */
+export async function fetchScryfall(cards: Card[]): Promise<Card[]> {
+  const cardImageUris: string[][] = [];
+
   const cardQueue = cards.slice();
 
   while (cardQueue.length > 0) {
@@ -55,6 +63,24 @@ export async function fetchScryfall(cards: Card[]) {
     });
 
     const data = await result.json();
-    console.log(data);
+
+    for (const item of data.data) {
+      try {
+        cardImageUris.push([item.image_uris.large]);
+      } catch {
+        cardImageUris.push([
+          item.card_faces[0].image_uris.large,
+          item.card_faces[1].image_uris.large,
+        ]);
+      }
+    }
   }
+
+  return cards.map((card, i) => ({
+    quantity: card.quantity,
+    name: card.name,
+    set: card.set,
+    collectorNumber: card.collectorNumber,
+    imgUris: cardImageUris[i],
+  }));
 }

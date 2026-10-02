@@ -8,6 +8,16 @@ import {
 import { parseDecklist } from "./stuff/parser";
 import type { Card } from "./stuff/card";
 
+function updateDecklist(cards: Card[]) {
+  decklist.value = "";
+  for (const card of cards) {
+    decklist.value +=
+      `${card.quantity} ${card.name} (${card.set}) ${card.collectorNumber}`
+        .trim()
+        .concat("\n");
+  }
+}
+
 async function handleFetchDecklist(url: string) {
   const parsedUrl = URL.parse(url);
   if (parsedUrl == null) {
@@ -36,25 +46,22 @@ async function handleFetchDecklist(url: string) {
       errorMessage.value = `${parsedUrl} is not supported`;
   }
 
-  decklist.value = "";
-  for (const card of cards) {
-    decklist.value +=
-      `${card.quantity} ${card.name} (${card.set}) ${card.collectorNumber}`
-        .trim()
-        .concat("\n");
-  }
+  updateDecklist(cards);
 
   fetchScryfall(cards);
 }
 
-function handleSubmitDecklist(decklist: string) {
+async function handleSubmitDecklist(decklist: string) {
   const cards = parseDecklist(decklist);
-  fetchScryfall(cards);
+  const cardsWithImages = await fetchScryfall(cards);
+  cardList.value = cardsWithImages;
 }
 
 const errorMessage = ref("");
 const urlInput = ref("https://archidekt.com/api/decks/26061450/");
 const decklist = ref("");
+
+const cardList = ref<Card[]>([]);
 </script>
 
 <template>
@@ -66,5 +73,10 @@ const decklist = ref("");
     <textarea name="decklist" v-model="decklist"></textarea>
 
     <button @click="handleSubmitDecklist(decklist)">Submit</button>
+
+    <div v-for="card in cardList">
+      <img :src="card.imgUris![0]" alt="">
+      <img :src="card.imgUris![1]" alt="">
+    </div>
   </main>
 </template>

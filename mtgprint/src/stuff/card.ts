@@ -3,5 +3,5 @@ export interface Card {
   name: string;
   set?: string;
   collectorNumber?: string;
-  imgSrc?: string;
+  imgUris?: string[];
 }
