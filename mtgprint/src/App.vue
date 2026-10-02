@@ -6,6 +6,7 @@ import {
   fetchScryfall,
 } from "./stuff/api";
 import { parseDecklist } from "./stuff/parser";
+import type { Card } from "./stuff/card";
 
 async function handleFetchDecklist(url: string) {
   const parsedUrl = URL.parse(url);
@@ -14,21 +15,33 @@ async function handleFetchDecklist(url: string) {
     return;
   }
 
+  let cards: Card[] = [];
+
   switch (parsedUrl.hostname) {
     case "moxfield.com": {
       const deckId = parsedUrl.pathname.split("/").at(-1)!;
-      return fetchMoxfieldDeckData(deckId);
+      cards = await fetchMoxfieldDeckData(deckId);
+      break;
     }
 
     case "archidekt.com": {
       const parts = parsedUrl.pathname.split("/");
       const index = parts.findIndex((s) => s == "decks") + 1;
       const deckId = parts.at(index)!;
-      return fetchArchidektDeckData(deckId);
+      cards = await fetchArchidektDeckData(deckId);
+      break;
     }
 
     default:
       errorMessage.value = `${parsedUrl} is not supported`;
+  }
+
+  decklist.value = "";
+  for (const card of cards) {
+    decklist.value +=
+      `${card.quantity} ${card.name} (${card.set}) ${card.collectorNumber}`
+        .trim()
+        .concat("\n");
   }
 }
 
