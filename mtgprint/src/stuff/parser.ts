@@ -4,6 +4,11 @@ function isDigit(s: string): boolean {
   return /^\d+$/.test(s);
 }
 
+export function removeDoubleSidedName(s: string): string {
+  if (!s.includes("/")) return s;
+  return s.substring(0, s.indexOf("/") - 1);
+}
+
 function parseLine(line: string): Card {
   let name = "";
   let quantity = 1;
@@ -42,9 +47,7 @@ function parseLine(line: string): Card {
     name = rest;
   }
 
-  if (name.includes("/")) {
-    name = name.substring(0, name.indexOf("/") - 1);
-  }
+  name = removeDoubleSidedName(name);
 
   const card: Card = {
     name,

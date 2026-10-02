@@ -1,4 +1,5 @@
 import type { Card } from "./card";
+import { removeDoubleSidedName } from "./parser";
 
 const CORS_PROXY_URL = "https://proxy.corsfix.com/?";
 
@@ -23,7 +24,7 @@ export async function fetchArchidektDeckData(deckId: string): Promise<Card[]> {
 
   const cards: Card[] = body.cards.map((cardData: any) => ({
     quantity: cardData.quantity,
-    name: cardData.card.oracleCard.name,
+    name: removeDoubleSidedName(cardData.card.oracleCard.name),
     set: cardData.card.edition.editioncode,
     collectorNumber: cardData.card.collectorNumber,
   }));
@@ -34,21 +35,26 @@ export async function fetchArchidektDeckData(deckId: string): Promise<Card[]> {
 }
 
 export async function fetchScryfall(cards: Card[]) {
-  const result = await fetch("https://api.scryfall.com/cards/collection", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      identifiers: cards.map((card) => ({
-        name: card.name,
-        set: card.set,
-        collector_number: card.collectorNumber,
-      })),
-    }),
-  });
+  const cardQueue = cards.slice();
 
-  const data = await result.json();
+  while (cardQueue.length > 0) {
+    const cardBatch = cardQueue.splice(0, 75);
 
-  console.log(data);
+    const result = await fetch("https://api.scryfall.com/cards/collection", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        identifiers: cardBatch.map((card) => ({
+          name: card.name,
+          set: card.set,
+          collector_number: card.collectorNumber,
+        })),
+      }),
+    });
+
+    const data = await result.json();
+    console.log(data);
+  }
 }

@@ -43,6 +43,8 @@ async function handleFetchDecklist(url: string) {
         .trim()
         .concat("\n");
   }
+
+  fetchScryfall(cards);
 }
 
 function handleSubmitDecklist(decklist: string) {
