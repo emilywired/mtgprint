@@ -73,9 +73,6 @@ function createPDF() {
     "img",
   ) as NodeListOf<HTMLImageElement>;
 
-  console.log(cardImages[0].naturalWidth);
-  console.log(cardImages[0].naturalHeight);
-
   generatePDF(cardImages);
 }
 

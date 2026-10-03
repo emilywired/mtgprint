@@ -1,6 +1,51 @@
 import jsPDF from "jspdf";
 
-interface Params {}
+interface Params {
+  gapMm: number;
+}
+
+export async function generatePDF(
+  imageElements: Iterable<HTMLImageElement>,
+  params: Params = { gapMm: 2 },
+) {
+  const doc = new jsPDF({ unit: "mm" });
+
+  const pageWidth = 210;
+  const pageHeight = 297;
+  const cardWidth = 63;
+  const cardHeight = 88;
+  const marginX = (pageWidth - cardWidth * 3 - params.gapMm * 2) / 2;
+  const marginY = (pageHeight - cardHeight * 3 - params.gapMm * 2) / 2;
+
+  let row = 0;
+  let column = 0;
+  for (const imageElement of imageElements) {
+    const rawImage = await imageElementToUint8Array(imageElement);
+
+    doc.addImage(
+      rawImage,
+      "png",
+      marginX + params.gapMm * column + cardWidth * column,
+      marginY + params.gapMm * row + cardHeight * row,
+      cardWidth,
+      cardHeight,
+      undefined,
+      "NONE",
+    );
+
+    if (++column == 3) {
+      column = 0;
+      row++;
+    }
+
+    if (row == 3) {
+      doc.addPage();
+      row = 0;
+    }
+  }
+
+  doc.save("deck.pdf");
+}
 
 async function imageElementToUint8Array(
   imgElement: HTMLImageElement,
@@ -24,17 +69,6 @@ async function imageElementToUint8Array(
   return new Uint8Array(arrayBuffer);
 }
 
-export async function generatePDF(
-  imageElements: Iterable<HTMLImageElement>,
-  params?: Params,
-) {
-  const doc = new jsPDF({ unit: "mm" });
+function addBleed() {}
 
-  // TODO: Promise.all
-  for (const imgElement of imageElements) {
-    const rawBytes = await imageElementToUint8Array(imgElement);
-    doc.addImage(rawBytes, "png", 0, 0, 63, 88, undefined, "NONE");
-    doc.save("page-1.pdf");
-    break;
-  }
-}
+function addSquareCorners() {}
