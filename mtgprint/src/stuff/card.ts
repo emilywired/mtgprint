@@ -3,5 +3,8 @@ export interface Card {
   name: string;
   set?: string;
   collectorNumber?: string;
-  imgUris?: string[];
+}
+
+export interface CardWithImages extends Card {
+  imgUris: string[];
 }

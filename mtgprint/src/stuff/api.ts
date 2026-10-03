@@ -1,4 +1,4 @@
-import type { Card } from "./card";
+import type { Card, CardWithImages } from "./card";
 import { removeDoubleSidedName } from "./parser";
 
 const CORS_PROXY_URL = "https://proxy.corsfix.com/?";
@@ -22,8 +22,6 @@ export async function fetchArchidektDeckData(deckId: string): Promise<Card[]> {
 
   const body = await result.json();
 
-  // TODO: get token ids from every card, figure out how to get scryfall data from that
-
   const cards: Card[] = body.cards.map((cardData: any) => ({
     quantity: cardData.quantity,
     name: removeDoubleSidedName(cardData.card.oracleCard.name),
@@ -36,11 +34,7 @@ export async function fetchArchidektDeckData(deckId: string): Promise<Card[]> {
   return cards;
 }
 
-/**
- *
- * @returns Deep copy of cards with imageSrcs
- */
-export async function fetchScryfall(cards: Card[]): Promise<Card[]> {
+export async function fetchScryfall(cards: Card[]): Promise<CardWithImages[]> {
   const cardImageUris: string[][] = [];
 
   const cardQueue = cards.slice();
@@ -62,15 +56,17 @@ export async function fetchScryfall(cards: Card[]): Promise<Card[]> {
       }),
     });
 
+    // TODO: add tokens
+
     const data = await result.json();
 
     for (const item of data.data) {
       try {
-        cardImageUris.push([item.image_uris.large]);
+        cardImageUris.push([item.image_uris.png]);
       } catch {
         cardImageUris.push([
-          item.card_faces[0].image_uris.large,
-          item.card_faces[1].image_uris.large,
+          item.card_faces[0].image_uris.png,
+          item.card_faces[1].image_uris.png,
         ]);
       }
     }

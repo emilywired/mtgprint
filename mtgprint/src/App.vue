@@ -6,7 +6,8 @@ import {
   fetchScryfall,
 } from "./stuff/api";
 import { parseDecklist } from "./stuff/parser";
-import type { Card } from "./stuff/card";
+import type { Card, CardWithImages } from "./stuff/card";
+import { generatePDF } from "./stuff/pdf";
 
 function updateDecklist(cards: Card[]) {
   decklist.value = "";
@@ -57,11 +58,33 @@ async function handleSubmitDecklist(decklist: string) {
   cardList.value = cardsWithImages;
 }
 
+function createPDF() {
+  if (cardList.value.length === 0) {
+    errorMessage.value = "No cards to print";
+    return;
+  }
+
+  if (cardsElement.value === null) {
+    errorMessage.value = "HTML element not found";
+    return;
+  }
+
+  const cardImages = cardsElement.value.querySelectorAll(
+    "img",
+  ) as NodeListOf<HTMLImageElement>;
+
+  console.log(cardImages[0].naturalWidth);
+  console.log(cardImages[0].naturalHeight);
+
+  generatePDF(cardImages);
+}
+
 const errorMessage = ref("");
 const urlInput = ref("https://archidekt.com/api/decks/26061450/");
 const decklist = ref("");
 
-const cardList = ref<Card[]>([]);
+const cardList = ref<CardWithImages[]>([]);
+const cardsElement = ref<HTMLDivElement | null>(null);
 </script>
 
 <template>
@@ -74,9 +97,24 @@ const cardList = ref<Card[]>([]);
 
     <button @click="handleSubmitDecklist(decklist)">Submit</button>
 
-    <div v-for="card in cardList">
-      <img :src="card.imgUris![0]" alt="">
-      <img :src="card.imgUris![1]" alt="">
+    <button @click="createPDF">Download PDF</button>
+
+    <div class="cards" ref="cardsElement">
+      <img
+        :src="image"
+        class="card"
+        crossorigin="anonymous"
+        v-for="image in cardList.map((card) => card.imgUris).flat()"
+      />
     </div>
   </main>
 </template>
+
+<style scoped>
+.cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  width: 1200px;
+  gap: 15px;
+}
+</style>
