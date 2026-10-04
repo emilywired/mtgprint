@@ -34,33 +34,36 @@ export async function fetchArchidektDeckData(deckId: string): Promise<Card[]> {
   return cards;
 }
 
+function fetchScryfallChunk(cards: Card[]) {
+  return fetch("https://api.scryfall.com/cards/collection", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      identifiers: cards.map((card) => ({
+        name: card.name,
+        set: card.set,
+        collector_number: card.collectorNumber,
+      })),
+    }),
+  }).then((result) => result.json());
+}
+
 export async function fetchScryfall(cards: Card[]): Promise<CardWithImages[]> {
+  const chunks: Card[][] = [];
+
+  for (let i = 0; i < cards.length; i += 75) {
+    const chunk = cards.slice(i, i + 75);
+    chunks.push(chunk);
+  }
+
   const cardImageUris: string[][] = [];
 
-  const cardQueue = cards.slice();
+  const jsonResults = await Promise.all(chunks.map(fetchScryfallChunk));
 
-  while (cardQueue.length > 0) {
-    const cardBatch = cardQueue.splice(0, 75);
-
-    const result = await fetch("https://api.scryfall.com/cards/collection", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        identifiers: cardBatch.map((card) => ({
-          name: card.name,
-          set: card.set,
-          collector_number: card.collectorNumber,
-        })),
-      }),
-    });
-
-    // TODO: add tokens
-
-    const data = await result.json();
-
-    for (const item of data.data) {
+  for (const result of jsonResults) {
+    for (const item of result.data) {
       try {
         cardImageUris.push([item.image_uris.png]);
       } catch {
