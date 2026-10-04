@@ -17,10 +17,17 @@ export async function generatePDF(
   const marginX = (pageWidth - cardWidth * 3 - params.gapMm * 2) / 2;
   const marginY = (pageHeight - cardHeight * 3 - params.gapMm * 2) / 2;
 
+  const imageCache: Map<HTMLImageElement, Uint8Array> = new Map();
+
   let row = 0;
   let column = 0;
   for (const imageElement of imageElements) {
-    const rawImage = await imageElementToUint8Array(imageElement);
+    let rawImage = imageCache.get(imageElement);
+    if (rawImage === undefined) {
+      const raw = await imageElementToUint8Array(imageElement);
+      imageCache.set(imageElement, raw);
+      rawImage = raw;
+    }
 
     doc.addImage(
       rawImage,
