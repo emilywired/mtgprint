@@ -82,6 +82,8 @@ const decklist = ref("");
 
 const cardList = ref<CardWithImages[]>([]);
 const cardsElement = ref<HTMLDivElement | null>(null);
+
+const includeSecondSides = ref(true);
 </script>
 
 <template>
@@ -97,12 +99,13 @@ const cardsElement = ref<HTMLDivElement | null>(null);
     <button @click="createPDF">Download PDF</button>
 
     <div class="cards" ref="cardsElement">
-      <img
-        :src="image"
-        class="card"
-        crossorigin="anonymous"
-        v-for="image in cardList.map((card) => card.imgUris).flat()"
-      />
+      <template v-for="card in cardList">
+        <template v-for="_amount in card.quantity">
+          <template v-for="image in card.imgUris" v-if="includeSecondSides">
+            <img class="card" crossorigin="anonymous" :src="image" />
+          </template>
+        </template>
+      </template>
     </div>
   </main>
 </template>

@@ -51,18 +51,17 @@ async function imageElementToUint8Array(
   imgElement: HTMLImageElement,
 ): Promise<Uint8Array> {
   const canvas = document.createElement("canvas");
-  canvas.width = imgElement.naturalWidth;
-  canvas.height = imgElement.naturalHeight;
-
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Could not get 2D context");
+
+  canvas.width = imgElement.naturalWidth;
+  canvas.height = imgElement.naturalHeight;
 
   ctx.drawImage(imgElement, 0, 0);
 
   const blob = await new Promise<Blob | null>((resolve) =>
     canvas.toBlob((b) => resolve(b), "image/png"),
   );
-
   if (!blob) throw new Error("Blob conversion failed");
 
   const arrayBuffer = await blob.arrayBuffer();
